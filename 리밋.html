@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>슬기로운 절주생활 가이드</title>
+    <style>
+        /* 기본 스타일 및 태블릿 최적화 */
+        body { font-family: 'Malgun Gothic', 'Arial', sans-serif; margin: 0; padding: 0; background-color: #f0f4f8; display: flex; flex-direction: column; height: 100vh; }
+        .app-header { background-color: #007bff; color: white; padding: 15px 20px; text-align: center; font-size: 1.5em; font-weight: bold; }
+        .tabs { display: flex; justify-content: space-around; background-color: #e9ecef; border-bottom: 3px solid #dee2e6; }
+        .tab-button { flex-grow: 1; padding: 15px 0; text-align: center; cursor: pointer; font-size: 1.1em; color: #495057; transition: background-color 0.3s; border-right: 1px solid #dee2e6; }
+        .tab-button:last-child { border-right: none; }
+        .tab-button.active { background-color: white; color: #007bff; border-bottom: 3px solid #007bff; font-weight: bold; }
+        
+        .tab-content { padding: 30px 40px; flex-grow: 1; overflow-y: auto; background-color: white; display: none; }
+        .tab-content.active { display: block; }
+
+        /* 공통 컴포넌트 스타일 */
+        h2 { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 5px; font-size: 1.8em; }
+        /* 보건소 문구 스타일 추가 */
+        .health-center-info { font-size: 1em; color: #6c757d; margin-bottom: 20px; display: block; text-align: center; }
+        
+        .question-box { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 25px; margin-bottom: 20px; }
+        .question-box p { font-size: 1.3em; margin-bottom: 20px; font-weight: bold; color: #343a40; }
+        .options button { display: block; width: 100%; padding: 15px; margin-bottom: 12px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 8px; font-size: 1.1em; cursor: pointer; text-align: left; transition: background-color 0.2s, border-color 0.2s; }
+        .options button:hover { background-color: #dee2e6; }
+        .options button.selected { background-color: #007bff; color: white; border-color: #007bff; }
+        .result-message { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 1.2em; font-weight: bold; text-align: center; }
+        .result-message.correct { background-color: #d4edda; color: #155724; }
+        .result-message.incorrect { background-color: #f8d7da; color: #721c24; }
+        .rationale { margin-top: 15px; padding: 15px; border-left: 5px solid #ffc107; background-color: #fff3cd; font-size: 1em; }
+        .action-container { margin-top: 30px; text-align: right; }
+        .next-btn, .finish-btn { padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.2em; cursor: pointer; margin-left: 10px; }
+        .next-btn { background-color: #28a745; color: white; }
+        .finish-btn { background-color: #dc3545; color: white; }
+        
+        /* AUDIT 특정 스타일 */
+        .gender-select button { padding: 15px 30px; margin: 15px; font-size: 1.2em; border: 2px solid #007bff; background-color: #ffffff; border-radius: 8px; cursor: pointer; }
+        .gender-select button.selected { background-color: #007bff; color: white; }
+
+        /* 서약 탭 특정 스타일 */
+        #pledge-date { font-size: 1.2em; color: #6c757d; margin-bottom: 20px; display: block; text-align: center; }
+        .pledge-goal-select { max-width: 600px; margin: 0 auto 30px; }
+        .pledge-goal-select label { font-size: 1.1em; display: block; margin-bottom: 10px; font-weight: bold; }
+        .pledge-goal-select select { padding: 12px; font-size: 1em; width: 100%; border-radius: 5px; border: 1px solid #ced4da; }
+        .pledge-statement { border: 2px dashed #007bff; padding: 25px; margin: 30px 0; font-size: 1.3em; line-height: 1.6; text-align: center; background-color: #eaf3ff; }
+        #signature-canvas { border: 2px solid #ced4da; border-radius: 8px; background-color: #ffffff; cursor: crosshair; display: block; width: 100%; height: 150px; }
+        .signature-actions { margin-top: 15px; text-align: right; }
+        .signature-actions button { background-color: #ffc107; color: #343a40; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; font-weight: bold; }
+        .pledge-submit-btn { background-color: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.2em; width: 100%; margin-top: 20px; cursor: pointer; }
+        .complete-message { text-align: center; padding: 40px; background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; border-radius: 10px; font-size: 1.5em; font-weight: bold; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-header">
+        슬기로운 절주생활 가이드
+    </div>
+    
+    <div class="tabs">
+        <div class="tab-button active" onclick="openTab(event, 'quiz')">🥇 음주 상식 퀴즈</div>
+        <div class="tab-button" onclick="openTab(event, 'audit')">🔬 알코올 중독 선별검사(AUDIT)</div>
+        <div class="tab-button" onclick="openTab(event, 'pledge')">✍️ 절주 서약</div>
+    </div>
+    
+    <div id="quiz" class="tab-content active">
+        <h2>음주 상식 퀴즈</h2>
+        <span class="health-center-info">제주시 제주보건소</span>
+        <div id="quiz-container">
+            </div>
+        <div id="quiz-final-result" style="display: none;">
+            </div>
+    </div>
+    
+    <div id="audit" class="tab-content">
+        <h2>알코올 중독 선별검사 (AUDIT)</h2>
+        <span class="health-center-info">제주시 제주보건소</span>
+        <div id="audit-intro">
+            <p style="font-size: 1.2em; text-align: center; margin-bottom: 30px;">정확한 결과를 위해 **성별**을 먼저 선택해 주세요.</p>
+            <div class="gender-select" style="text-align: center;">
+                <button id="gender-male" onclick="setGender('M', this)">👨 남성</button>
+                <button id="gender-female" onclick="setGender('F', this)">👩 여성</button>
+            </div>
+        </div>
+        <div id="audit-container" style="display: none;">
+            </div>
+        <div id="audit-final-result" style="display: none;">
+            </div>
+    </div>
+    
+    <div id="pledge" class="tab-content">
+        <h2>나의 건강을 위한 절주 서약</h2>
+        <span class="health-center-info">제주시 제주보건소</span>
+        <div id="pledge-complete-message" class="complete-message" style="display: none;"></div>
+        <div id="pledge-form">
+            <label id="pledge-date"></label>
+
+            <div class="pledge-goal-select">
+                <label for="goal-select">나의 절주 목표를 설정해주세요:</label>
+                <select id="goal-select">
+                    <option value="완전 금주">✅ 완전 금주 (술을 끊겠습니다)</option>
+                    <option value="주 1회 이하 음주">📅 주 1회 이하 음주</option>
+                    <option value="월 2회 이하 음주">🗓️ 월 2회 이하 음주</option>
+                    <option value="맥주 500cc 1캔 이하">🍺 음주 시 맥주 500cc 1캔 이하</option>
+                </select>
+            </div>
+
+            <div class="pledge-statement">
+                나는 나의 건강과 행복, 그리고 소중한 사람들을 위해 
+                <span id="display-goal" style="color: #dc3545; font-weight: bold;">[완전 금주]</span>를 실천할 것을 약속합니다. 
+                알코올은 [1급 발암물질]임을 인식하고, 오늘부터 건강한 삶을 만들어가겠습니다.
+            </div>
+            
+            <p style="text-align: center; margin-bottom: 10px; font-weight: bold;">서명하기</p>
+            <canvas id="signature-canvas"></canvas>
+            <div class="signature-actions">
+                <button onclick="clearSignature()">서명 지우기</button>
+            </div>
+
+            <button class="pledge-submit-btn" onclick="completePledge()">절주 서약 완료 및 저장</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 탭 이동 기능 ---
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+
+            // 🚨 절주 서약 탭 클릭 시 조건 검사 추가 (수정됨) 🚨
+            if (tabName === 'pledge') {
+                if (!isQuizCompleted) {
+                    alert("⚠️ 절주 서약은 '음주 상식 퀴즈'를 먼저 완료해야 합니다.");
+                    return;
+                }
+                if (!isAuditCompleted) {
+                    alert("⚠️ 절주 서약은 '알코올 중독 선별검사(AUDIT)'를 먼저 완료해야 합니다.");
+                    return;
+                }
+            }
+
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+            
+            // 탭 이동 시 퀴즈 및 AUDIT 초기화 (필요하다면)
+            if (tabName === 'quiz') {
+                // resetQuiz(); // 탭 이동 시 자동 초기화 방지
+            } else if (tabName === 'audit') {
+                // resetAudit(); // 탭 이동 시 자동 초기화 방지
+            } else if (tabName === 'pledge') {
+                initPledge();
+            }
+        }
+
+        // --- 1. 음주 상식 퀴즈 데이터 및 로직 ---
+        const quizData = [
+            { q: "알코올(에탄올)이 간에서 분해될 때 주로 생성되며, WHO가 지정한 1급 발암물질로 알려진 물질은?", options: ["1. 에탄올", "2. 아세트알데히드", "3. 아세트산", "4. 메탄올"], answer: 1, rationale: "정답은 아세트알데히드입니다. 이는 알코올 분해 과정에서 발생하는 강력한 독성 물질이자 1급 발암물질로, 숙취와 홍조의 주범입니다." },
+            { q: "아세트알데히드가 체내 축적되지 않는 경우는?", options: ["과음", "폭음", "아세트알데히드 분해효소 부족", "절주(금주)"], answer: 3, rationale: "정답은 절주(금주)입니다. 과음, 폭음시 분해되지 못한 아세트알데히드가 간, 뇌 등 조직에 축적되어 손상을 일으킵니다." },
+            { q: "아세트알데히드가 인체에서 유발하는 가장 심각한 독성작용은?", options: ["심각한 탈수 증상", "두통, 메스꺼움", "세포의 DNA를 손상시켜 암 발생 유발", "칼슘 흡수 방해로 인한 골다공증"], answer: 2, rationale: "정답은 세포의 DNA를 손상시켜 암 발생 유발입니다. 아세트알데히드는 DNA에 직접 결합하여 돌연변이를 유발함으로써 여러 종류의 암을 발생시킵니다." },
+            { q: "술 마신 후 얼굴 홍조, 두통, 심장 박동 증가는 무엇이 몸에 쌓여 보내는 위험 신호인가요?", options: ["체내의 심각한 수분 부족", "분해되지 못하고 축적된 아세트알데히드", "알코올로 인한 일시적 빈혈", "간의 지방 축적"], answer: 1, rationale: "정답은 분해되지 못하고 축적된 아세트알데히드입니다." },
+            { q: "동양인이 서양인보다 술에 취약하고 홍조가 쉽게 나타나는 이유는?", options: ["간 크기가 작아서", "아세트알데히드 분해효소(ALDH2)가 적어서", "흡수 속도가 빨라서", "혈관이 약해서"], answer: 1, rationale: "정답은 아세트알데히드 분해효소(ALDH2)가 적기 때문입니다. 동아시아인의 약 30~50%가 ALDH2 변이 유전자를 가지고 있어 아세트알데히드가 쉽게 체내에 축적됩니다." },
+            { q: "술을 자주 마시면 주량이 늘어난다?", options: ["O", "X"], answer: 1, rationale: '정답은 "X"입니다. 이는 뇌에 알코올에 대한 내성이 생겨 독성 신호를 덜 느끼는 것입니다. 분해 능력은 변함이 없어 주량이 늘었다 생각한 만큼 많은 아세트알데히드(독성물질)가 체내 축적됩니다.' },
+            { q: "알코올 건강 위험을 최소화하고 아세트알데히드 축적을 막는 가장 근본적 방법은?", options: ["숙취해소 음료를 마신다", "기름진 안주를 먹는다", "사우나를 한다", "절주(금주)를 실천한다"], answer: 3, rationale: "정답은 절주(금주)를 실천한다입니다." }
+        ];
+
+        let currentQuizIndex = 0;
+        let correctAnswers = 0;
+        let quizAnswered = false;
+        let isQuizCompleted = false; // 👈 추가된 변수
+
+        function loadQuizQuestion(index) {
+            const container = document.getElementById('quiz-container');
+            if (index >= quizData.length) {
+                showQuizResult();
+                return;
+            }
+
+            const data = quizData[index];
+            quizAnswered = false;
+            
+            let optionsHtml = '';
+            data.options.forEach((option, i) => {
+                optionsHtml += `<button data-index="${i}" onclick="checkQuizAnswer(${index}, ${i})">${option}</button>`;
+            });
+
+            container.innerHTML = `
+                <div class="question-box">
+                    <p>Q${index + 1}. ${data.q}</p>
+                    <div class="options" id="quiz-options">${optionsHtml}</div>
+                </div>
+                <div id="quiz-feedback" style="display: none;"></div>
+                <div class="action-container">
+                    <button class="next-btn" id="quiz-next-btn" onclick="nextQuizQuestion()" style="display: none;">${index === quizData.length - 1 ? '결과 보기' : '다음 문제'}</button>
+                </div>
+            `;
+        }
+
+        function checkQuizAnswer(questionIndex, selectedIndex) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+
+            const data = quizData[questionIndex];
+            const feedbackDiv = document.getElementById('quiz-feedback');
+            const optionButtons = document.getElementById('quiz-options').querySelectorAll('button');
+            const nextBtn = document.getElementById('quiz-next-btn');
+            
+            // 모든 버튼 비활성화 및 선택 표시
+            optionButtons.forEach(btn => {
+                btn.disabled = true;
+                if (parseInt(btn.getAttribute('data-index')) === selectedIndex) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            // 정답 확인
+            const isCorrect = selectedIndex === data.answer;
+            if (isCorrect) {
+                correctAnswers++;
+                feedbackDiv.innerHTML = `<div class="result-message correct">✅ 정답입니다!</div><div class="rationale">${data.rationale}</div>`;
+            } else {
+                feedbackDiv.innerHTML = `<div class="result-message incorrect">❌ 오답입니다. (정답: ${data.options[data.answer].split('.')[0].trim()}번)</div><div class="rationale">${data.rationale}</div>`;
+                // 정답 버튼을 시각적으로 표시할 수 있습니다. (예: 정답은 초록색 테두리로 표시)
+            }
+            
+            feedbackDiv.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function nextQuizQuestion() {
+            currentQuizIndex++;
+            loadQuizQuestion(currentQuizIndex);
+        }
+        
+        function showQuizResult() {
+            const container = document.getElementById('quiz-container');
+            const resultDiv = document.getElementById('quiz-final-result');
+            let evaluation = '';
+
+            if (correctAnswers === quizData.length) {
+                evaluation = '👍 **만점!** 당신은 알코올 전문가! 이미 절주의 필요성을 잘 아시니 실천만 남았습니다.';
+            } else if (correctAnswers >= 5) {
+                evaluation = '👏 **매우 우수!** 음주 상식을 잘 알고 계시네요. 지식을 실천으로 이어가세요!';
+            } else if (correctAnswers >= 3) {
+                evaluation = '🤔 **보통입니다.** 몇 가지 오해가 있네요. 알코올의 독성 위험을 다시 한번 확인해보세요.';
+            } else {
+                evaluation = '⚠️ **위험!** 알코올에 대한 잘못된 지식이 많습니다. 알코올은 1급 발암물질임을 기억하고, 반드시 절주해야 합니다.';
+            }
+
+            isQuizCompleted = true; // 👈 퀴즈 완료 시 상태 업데이트
+
+            container.style.display = 'none';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <h2>최종 퀴즈 결과</h2>
+                <span class="health-center-info">제주시 제주보건소</span>
+                <div style="text-align: center; padding: 30px; border: 2px solid #007bff; border-radius: 10px; background-color: #f0f8ff;">
+                    <p style="font-size: 2em; font-weight: bold; margin-bottom: 10px;">총점: ${correctAnswers} / ${quizData.length}점</p>
+                    <p style="font-size: 1.5em; line-height: 1.5;">${evaluation}</p>
+                    <button class="finish-btn" onclick="resetQuiz()">다시하기</button>
+                </div>
+            `;
+        }
+
+        function resetQuiz() {
+            currentQuizIndex = 0;
+            correctAnswers = 0;
+            isQuizCompleted = false; // 👈 다시하기 시 상태 초기화
+            document.getElementById('quiz-container').style.display = 'block';
+            document.getElementById('quiz-final-result').style.display = 'none';
+            loadQuizQuestion(currentQuizIndex);
+        }
+        
+        // --- 2. AUDIT 선별검사 데이터 및 로직 ---
+        const auditData = [
+            { q: "Q1. 술을 얼마나 자주 마십니까?", options: ["전혀 마시지 않는다 (0점)", "월 1회 이하 (1점)", "월 2~4회 (2점)", "주 2~3회 (3점)", "주 4회 이상 (4점)"] },
+            { q: "Q2. 술을 마시는 날에는 보통 몇 잔을 마십니까(술종류와 상관없이 해당 술의 잔 기준)?", options: ["1~2잔 (0점)", "3~4잔 (1점)", "5~6잔 (2점)", "7~9잔 (3점)", "10잔 이상 (4점)"] },
+            { q: "Q3. 한 번의 술자리에서 소주 1병 또는 맥주 4병 이상 마시는 경우는 얼마나 자주 있습니까?", options: ["전혀 없다 (0점)", "월 1회 이하 (1점)", "월 2~4회 (2점)", "주 1회 (3점)", "거의 매일 또는 매일 (4점)"] },
+            { q: "Q4. 지난 1년 동안, 일단 술을 마시기 시작하면 끊기가 어려웠던 적이 얼마나 자주 있었습니까?", options: ["전혀 없다 (0점)", "월 1회 이하 (1점)", "월 2~4회 (2점)", "주 1회 (3점)", "거의 매일 또는 매일 (4점)"] },
+            { q: "Q5. 지난 1년 동안, 평소보다 술 마신 다음날 아침에 해장술을 마셔야 했던 적이 얼마나 자주 있었습니까?", options: ["전혀 없다 (0점)", "월 1회 이하 (1점)", "월 2~4회 (2점)", "주 1회 (3점)", "거의 매일 또는 매일 (4점)"] },
+            { q: "Q6. 지난 1년 동안, 술을 마신 후 숙취 등으로 인해 평소 하던 일에 지장이 있었던 적이 얼마나 자주 있었습니까?", options: ["전혀 없다 (0점)", "월 1회 이하 (1점)", "월 2~4회 (2점)", "주 1회 (3점)", "거의 매일 또는 매일 (4점)"] },
+            { q: "Q7. 지난 1년 동안, 술을 마신 후 후회하거나 죄책감을 느꼈던 적이 얼마나 자주 있었습니까?", options: ["전혀 없다 (0점)", "월 1회 이하 (1점)", "월 2~4회 (2점)", "주 1회 (3점)", "거의 매일 또는 매일 (4점)"] },
+            { q: "Q8. 지난 1년 동안, 술 때문에 기억이 끊긴 적(필름이 끊긴 적)이 얼마나 자주 있었습니까?", options: ["전혀 없다 (0점)", "월 1회 이하 (1점)", "월 2~4회 (2점)", "주 1회 (3점)", "거의 매일 또는 매일 (4점)"] },
+            { q: "Q9. 술 마시는 것 때문에 본인이나 다른 사람이 다친 적이 있었습니까?", options: ["없다 (0점)", "있다 (4점)"] },
+            { q: "Q10. 술 마시는 것 때문에 가족이나 친구, 의사 등이 걱정하거나 조언한 적이 있었습니까?", options: ["없다 (0점)", "있다 (4점)"] }
+        ];
+        
+        let currentAuditIndex = 0;
+        let auditScores = new Array(auditData.length).fill(0);
+        let userGender = null; // 'M' or 'F'
+        let isAuditCompleted = false; // 👈 추가된 변수
+
+        function setGender(gender, button) {
+            userGender = gender;
+            document.querySelectorAll('.gender-select button').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            document.getElementById('audit-intro').style.display = 'none';
+            document.getElementById('audit-container').style.display = 'block';
+            loadAuditQuestion(currentAuditIndex);
+        }
+
+        function loadAuditQuestion(index) {
+            const container = document.getElementById('audit-container');
+            if (index >= auditData.length) {
+                showAuditResult();
+                return;
+            }
+
+            const data = auditData[index];
+            let optionsHtml = '';
+
+            // Q9, Q10은 0점/4점 구성, 나머지는 0점~4점
+            const isBinary = index >= 8; 
+
+            data.options.forEach((option, i) => {
+                const score = isBinary ? (i === 0 ? 0 : 4) : i; // 0, 1, 2, 3, 4
+                optionsHtml += `<button data-score="${score}" onclick="selectAuditAnswer(${index}, ${score}, this)">${option}</button>`;
+            });
+
+            container.innerHTML = `
+                <div class="question-box">
+                    <p>${data.q}</p>
+                    <div class="options" id="audit-options">${optionsHtml}</div>
+                </div>
+                <div class="action-container" style="text-align: center;">
+                    <button class="next-btn" id="audit-next-btn" onclick="nextAuditQuestion()" style="display: none;">${index === auditData.length - 1 ? '결과 보기' : '다음 문항'}</button>
+                </div>
+            `;
+        }
+
+        function selectAuditAnswer(questionIndex, score, button) {
+            // 이전에 선택된 버튼의 스타일을 제거
+            document.getElementById('audit-options').querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+            
+            // 현재 선택된 버튼에 스타일 적용
+            button.classList.add('selected');
+            
+            // 점수 저장
+            auditScores[questionIndex] = score;
+
+            // 다음 버튼 활성화
+            document.getElementById('audit-next-btn').style.display = 'inline-block';
+        }
+
+        function nextAuditQuestion() {
+            // 다음 문항으로 넘어가기 전 현재 문항이 답변되었는지 확인 (선택된 버튼이 있는지 확인)
+            if (document.getElementById('audit-options').querySelector('.selected') === null) {
+                alert('문항을 선택해 주세요.');
+                return;
+            }
+            currentAuditIndex++;
+            loadAuditQuestion(currentAuditIndex);
+        }
+        
+        function showAuditResult() {
+            const totalScore = auditScores.reduce((a, b) => a + b, 0);
+            let assessment = '';
+            let recommendation = '';
+            let scoreThreshold;
+
+            if (userGender === 'M') { // 남성 기준
+                if (totalScore >= 20) {
+                    scoreThreshold = '20점 이상';
+                    assessment = '알코올 남용 또는 의존단계';
+                    recommendation = '알코올 사용 장애가 의심됩니다. 술을 마셔야 기분도 좋고, 일도 잘되고, 관계도 좋아진다고 생각합니다. 술을 줄이는 단계가 아니라 끊어야 합니다.';
+                } else if (totalScore >= 10) {
+                    scoreThreshold = '10~19점';
+                    assessment = '위험 음주군';
+                    recommendation = '음주량을 줄이는 노력이 필요합니다. 절주 상담 및 교육을 권고합니다.';
+                } else {
+                    scoreThreshold = '0~9점';
+                    assessment = '저위험군';
+                    recommendation = '건강한 음주 습관을 유지하세요.';
+                }
+            } else { // 여성 기준
+                if (totalScore >= 10) {
+                    scoreThreshold = '10점 이상';
+                    assessment = '알코올 남용 또는 의존단계';
+                    recommendation = '알코올 사용 장애가 의심됩니다. 술을 마셔야 기분도 좋고, 일도 잘되고, 관계도 좋아진다고 생각합니다. 술을 줄이는 단계가 아니라 끊어야 합니다.';
+                } else if (totalScore >= 6) {
+                    scoreThreshold = '6~9점';
+                    assessment = '위험 음주군';
+                    recommendation = '음주량을 줄이는 노력이 필요합니다. 절주 상담 및 교육을 권고합니다.';
+                } else {
+                    scoreThreshold = '0~5점';
+                    assessment = '저위험군';
+                    recommendation = '건강한 음주 습관을 유지하세요.';
+                }
+            }
+
+            isAuditCompleted = true; // 👈 AUDIT 완료 시 상태 업데이트
+
+            const container = document.getElementById('audit-container');
+            const resultDiv = document.getElementById('audit-final-result');
+            
+            container.style.display = 'none';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <h2>AUDIT 검사 결과</h2>
+                <span class="health-center-info">제주시 제주보건소</span>
+                <div style="text-align: center; padding: 30px; border: 2px solid #dc3545; border-radius: 10px; background-color: #f8e9eb;">
+                    <p style="font-size: 1.5em; font-weight: bold; margin-bottom: 5px;">성별: ${userGender === 'M' ? '남성' : '여성'}</p>
+                    <p style="font-size: 2em; font-weight: bold; margin-bottom: 20px;">총점: <span style="color: #dc3545;">${totalScore}</span>점</p>
+                    <p style="font-size: 1.8em; font-weight: bold; color: #007bff; margin-bottom: 15px;">판정: ${assessment}</p>
+                    <p style="font-size: 1.2em; line-height: 1.6;">**권고사항:** ${recommendation}</p>
+                    <p style="font-size: 0.9em; margin-top: 15px; color: #6c757d;">(참고: ${userGender === 'M' ? '남성' : '여성'} ${scoreThreshold} ${assessment} 기준입니다.)</p>
+                    <button class="finish-btn" onclick="resetAudit()">다시하기</button>
+                </div>
+            `;
+        }
+
+        function resetAudit() {
+            currentAuditIndex = 0;
+            auditScores = new Array(auditData.length).fill(0);
+            userGender = null;
+            isAuditCompleted = false; // 👈 다시하기 시 상태 초기화
+            document.getElementById('audit-intro').style.display = 'block';
+            document.getElementById('audit-container').style.display = 'none';
+            document.getElementById('audit-final-result').style.display = 'none';
+            document.querySelectorAll('.gender-select button').forEach(btn => btn.classList.remove('selected'));
+        }
+        
+        // --- 3. 절주 서약 로직 (서명 기능 포함) ---
+        let signaturePad;
+        let pledgeCanvas; // 전역 캔버스 참조 (작게 추가)
+
+        function initPledge() {
+            // 1. 서약 날짜 자동 생성
+            const today = new Date();
+            const dateString = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+            document.getElementById('pledge-date').textContent = dateString;
+
+            // 2. 목표 변경 시 서약 문구 업데이트
+            const goalSelect = document.getElementById('goal-select');
+            const displayGoal = document.getElementById('display-goal');
+            
+            // 초기 문구 설정
+            displayGoal.textContent = goalSelect.value;
+            
+            goalSelect.onchange = function() {
+                displayGoal.textContent = this.value;
+            };
+
+            // 3. 서명 패드 초기화
+            const canvas = document.getElementById('signature-canvas');
+            pledgeCanvas = canvas; // 전역으로 보관 (작게 추가)
+            // 캔버스의 크기를 부모 요소에 맞게 조정
+            function resizeCanvas() {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                // signaturePad가 이미 생성되어 있다면, clear 해줍니다.
+                if (signaturePad) {
+                    signaturePad.clear();
+                }
+            }
+            window.onresize = resizeCanvas;
+            resizeCanvas();
+
+            // SignaturePad 객체 생성
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgb(255, 255, 255)' // 서명 배경색 설정
+            });
+        }
+        
+        function clearSignature() {
+            if (signaturePad) {
+                signaturePad.clear();
+            }
+        }
+        
+        function completePledge() {
+            if (signaturePad && signaturePad.isEmpty()) {
+                alert("서명란에 서명을 해주세요.");
+                return;
+            }
+
+            const goal = document.getElementById('goal-select').value;
+            const date = document.getElementById('pledge-date').textContent;
+            
+            // 서명 이미지를 데이터 URL로 가져오기 (선택 사항: 서버 저장 또는 화면 출력용)
+            // const signatureDataUrl = signaturePad.toDataURL(); 
+
+            // 결과 메시지 표시
+            const formDiv = document.getElementById('pledge-form');
+            const completeDiv = document.getElementById('pledge-complete-message');
+            
+            formDiv.style.display = 'none';
+            completeDiv.style.display = 'block';
+            completeDiv.innerHTML = `
+                🎉 **건강한 다짐을 축하합니다!**
+                <br><br>
+                ${date} 자로 **${goal}** 서약이 완료되었습니다.
+                <br>
+                지금 바로 건강한 변화를 시작하세요!
+                <p style="font-size: 1em; margin-top: 20px;"></p>
+                <button class="finish-btn" style="margin-top: 20px; float: none;" onclick="location.reload()">처음으로</button>
+            `;
+            
+            // 서명 패드 비활성화
+            if (pledgeCanvas) {
+                pledgeCanvas.style.pointerEvents = 'none';
+            }
+            signaturePad = null;
+        }
+
+        // 앱 로드 시 퀴즈 탭을 기본으로 설정
+        window.onload = function() {
+            loadQuizQuestion(currentQuizIndex);
+            initPledge(); // 서명 패드는 미리 초기화
+            // 탭 클릭 없이도 초기화되도록 설정
+        }
+
+    </script>
+</body>
+</html>
